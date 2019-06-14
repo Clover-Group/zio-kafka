@@ -54,8 +54,8 @@ class SimpleConsumer extends WordSpecLike with Matchers with LazyLogging with De
       "receive messages produced on the topic" in runWithConsumer(groupID, clientID) { consumer =>
         for {
           _   <- consumer.subscribe(Subscription.Topics(Set(mytopic)))
-          kvs <- ZIO((1 to 1).toList.map(i => (s"msg$i")))
-          exp = Chunk.fromArray(kvs.toArray)
+          kvs = (1 to 1).toArray.map(i => (s"msg$i"))
+          exp = Chunk.fromArray(kvs)
 
           records <- pollNtimes(10, consumer)
           tmp = records.map { r =>
