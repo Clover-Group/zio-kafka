@@ -52,17 +52,13 @@ class SimpleConsumer extends WordSpecLike with Matchers with LazyLogging with De
 
     "poll" should {
       "receive messages produced on the topic" in runWithConsumer(groupID, clientID) { consumer =>
-        for {
-          _   <- consumer.subscribe(Subscription.Topics(Set(mytopic)))
-          kvs = (1 to 1).toArray.map(i => (s"msg$i"))
-          exp = Chunk.fromArray(kvs)
-
-          records <- pollNtimes(10, consumer)
-          tmp = records.map { r =>
-            r.value
-          }
-          act = Chunk.succeed(tmp)
-        } yield (act.map(a => a shouldEqual exp))
+        (consumer.subscribe(Subscription.Topics(Set(mytopic))) *> pollNtimes(10, consumer).map { records =>
+          val kvs = (1 to 1).toArray.map(i => (s"msg$i"))
+          val exp = Chunk.fromArray(kvs)
+          val tmp = records.map(_.value)
+          val act = Chunk.succeed(tmp)
+          act.map(_ shouldEqual exp)
+        })
       }
     }
   }
