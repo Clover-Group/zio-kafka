@@ -4,10 +4,10 @@ import com.typesafe.scalalogging.LazyLogging
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.{ Serde, Serdes }
 import org.scalatest.{ Matchers, WordSpecLike }
-import scalaz.zio.{ Chunk, DefaultRuntime, TaskR, UIO, ZIO }
-import scalaz.zio.blocking.Blocking
-import scalaz.zio.clock.Clock
-import scalaz.zio.duration._
+import zio.{ Chunk, DefaultRuntime, TaskR, UIO, ZIO }
+import zio.blocking.Blocking
+import zio.clock.Clock
+import zio.duration._
 
 class SimpleConsumer extends WordSpecLike with Matchers with LazyLogging with DefaultRuntime {
   import KafkaTestUtils._

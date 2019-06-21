@@ -6,6 +6,7 @@ homepage := Some(url("https://github.com/zio/zio-kafka"))
 name := "zio-kafka"
 licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0"))
 scalaVersion := mainScala
+maxErrors := 3
 parallelExecution in Test := false
 scalafmtOnCompile := true
 fork in Test := true
@@ -25,7 +26,7 @@ developers := List(
 )
 
 libraryDependencies ++= Seq(
-  "org.scalaz"              %% "scalaz-zio"     % "1.0-RC5",
+  "dev.zio"                 %% "zio"            % "1.0.0-RC8-6",
   "org.apache.kafka"        % "kafka-clients"   % "2.2.0",
   "org.scalatest"           %% "scalatest"      % "3.0.5" % "test",
   "io.github.embeddedkafka" %% "embedded-kafka" % "2.2.0" % "test",
