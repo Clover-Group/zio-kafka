@@ -3,12 +3,13 @@ package kafkaconsumer
 import org.apache.kafka.common.serialization.{ Serde, Serdes }
 import org.apache.kafka.clients.consumer.ConsumerConfig
 
-import zio.{ DefaultRuntime, TaskR }
+import zio.{ Chunk, DefaultRuntime, Task, TaskR, ZIO }
 import zio.blocking.Blocking
 import zio.clock.Clock
 import zio.duration._
 
-import zio.kafka.client.{ Consumer, ConsumerSettings }
+import zio.kafka.client.{ Consumer, ConsumerSettings, Subscription }
+import zio.kafka.client.KafkaTestUtils._
 
 sealed abstract class KafkaConsumer extends DefaultRuntime {
 
@@ -16,6 +17,9 @@ sealed abstract class KafkaConsumer extends DefaultRuntime {
 
   def settings(server: String, groupId: String, clientId: String): ConsumerSettings
   def run[A](server: String, groupId: String, clientId: String)(r: WorkerType[A]): A
+  def subscribe(server: String, groupId: String, clientId: String, topic: String): Task[Unit]
+  def unsubscribe(server: String, groupId: String, clientId: String): Task[Unit]
+  def poll(server: String, groupId: String, clientId: String, topic: String): Chunk[String]
 
 }
 
@@ -32,11 +36,31 @@ object KafkaConsumer extends KafkaConsumer {
       Map(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG -> "earliest")
     )
 
-  val server = s"localhost:9092"
-
   def run[A](server: String, groupId: String, clientId: String)(r: WorkerType[A]): A =
     unsafeRun(
       Consumer.make[String, String](settings(server, groupId, clientId)).use(r)
     )
 
+  def subscribe(server: String, groupId: String, clientId: String, topic: String): Task[Unit] =
+    run(server, groupId, clientId) { consumer =>
+      for {
+        outcome <- consumer.subscribe(Subscription.Topics(Set(topic)))
+      } yield ZIO.effect(outcome)
+
+    }
+
+  def unsubscribe(server: String, groupId: String, clientId: String): Task[Unit] =
+    run(server, groupId, clientId) { consumer =>
+      for {
+        outcome <- consumer.unsubscribe
+      } yield ZIO.effect(outcome)
+    }
+
+  def poll(server: String, groupId: String, clientId: String, topic: String): Chunk[String] =
+    run(server, groupId, clientId) { consumer =>
+      for {
+        recs <- pollNtimes(10, consumer)
+        tmp  = recs.map(_.value)
+      } yield tmp
+    }
 }
