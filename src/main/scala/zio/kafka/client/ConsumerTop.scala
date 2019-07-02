@@ -25,7 +25,9 @@ sealed abstract class KafkaConsumer extends DefaultRuntime {
   def settings(cfg: ConnectionConfig): ConsumerSettings
   def run[A](cfg: ConnectionConfig)(r: WorkerType[A]): A
   def subscribe(cfg: ConnectionConfig): Task[Unit]
-  def unsubscribe(cfg: ConnectionConfig): Task[Unit]
+  // def unsubscribe(cfg: ConnectionConfig): Task[Unit]
+  // def readBatch(cfg: ConnectionConfig): Chunk[String]
+  def peekBatch(cfg: ConnectionConfig): Chunk[String]
   def readBatch(cfg: ConnectionConfig): Chunk[String]
 
 }
@@ -56,7 +58,7 @@ object KafkaConsumer extends KafkaConsumer {
 
     }
 
-  def unsubscribe(cfg: ConnectionConfig): Task[Unit] =
+  /* def unsubscribe(cfg: ConnectionConfig): Task[Unit] =
     run(cfg) { consumer =>
       for {
         outcome <- consumer.unsubscribe
@@ -70,6 +72,29 @@ object KafkaConsumer extends KafkaConsumer {
           tmp <- recs.map(_.value)
         } yield tmp
       }
+
+    } */
+
+  def peekBatch(cfg: ConnectionConfig): Chunk[String] =
+    run(cfg) { consumer =>
+      for {
+        _     <- consumer.subscribe(Subscription.Topics(Set(cfg.topic)))
+        batch <- pollNtimes(5, consumer)
+        data  = batch.map(_.value)
+        _     <- consumer.unsubscribe
+      } yield data
+
+    }
+
+  def readBatch(cfg: ConnectionConfig): Chunk[String] =
+    run(cfg) { consumer =>
+      for {
+        _     <- consumer.subscribe(Subscription.Topics(Set(cfg.topic)))
+        batch <- pollNtimes(5, consumer)
+        data  = batch.map(_.value)
+        //_     <- consumer.unsubscribe
+
+      } yield data
 
     }
 
