@@ -1,5 +1,6 @@
-val mainScala = "2.12.8"
-val allScala  = Seq("2.11.12", mainScala)
+val mainScala    = "2.12.8"
+val allScala     = Seq("2.11.12", mainScala)
+val KafkaVersion = "2.3.0"
 
 organization := "dev.zio"
 homepage := Some(url("https://github.com/zio/zio-kafka"))
@@ -27,9 +28,9 @@ developers := List(
 
 libraryDependencies ++= Seq(
   "dev.zio"                 %% "zio"            % "1.0.0-RC9",
-  "org.apache.kafka"        % "kafka-clients"   % "2.2.0",
+  "org.apache.kafka"        % "kafka-clients"   % KafkaVersion,
+  "io.github.embeddedkafka" %% "embedded-kafka" % KafkaVersion,
   "org.scalatest"           %% "scalatest"      % "3.0.5" % "test",
-  "io.github.embeddedkafka" %% "embedded-kafka" % "2.3.0" % "test",
   "ch.qos.logback"          % "logback-classic" % "1.2.3" % "test",
   compilerPlugin("org.spire-math" %% "kind-projector" % "0.9.10")
 )
