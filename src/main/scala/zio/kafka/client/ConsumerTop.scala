@@ -79,9 +79,14 @@ object KafkaConsumer extends KafkaConsumer {
     run(cfg) { consumer =>
       for {
         _     <- consumer.subscribe(Subscription.Topics(Set(cfg.topic)))
+        _     = println("subscribe done")
         batch <- pollNtimes(5, consumer)
+        _     = println("poll done")
         data  = batch.map(_.value)
-        _     <- consumer.unsubscribe
+        size  = data.toArray.size
+        _     = println(s"data size = $size")
+        //_     <- consumer.unsubscribe
+        //_ = println ("unsubscribe done")
       } yield data
 
     }
@@ -92,6 +97,8 @@ object KafkaConsumer extends KafkaConsumer {
         _     <- consumer.subscribe(Subscription.Topics(Set(cfg.topic)))
         batch <- pollNtimes(5, consumer)
         data  = batch.map(_.value)
+        size  = data.toArray.size
+        _     = println(s"data size = $size")
         //_     <- consumer.unsubscribe
 
       } yield data
