@@ -2,14 +2,15 @@ package kafkaconsumer
 
 import org.apache.kafka.common.serialization.{ Serde, Serdes }
 import org.apache.kafka.clients.consumer.ConsumerConfig
+import org.apache.kafka.clients.consumer.ConsumerRecord
 
-import zio.{ Chunk, DefaultRuntime, Task, TaskR, ZIO }
+import zio.{ Chunk, DefaultRuntime, Task, TaskR, UIO, ZIO }
 import zio.blocking.Blocking
 import zio.clock.Clock
 import zio.duration._
 
 import zio.kafka.client.{ Consumer, ConsumerSettings, Subscription }
-import zio.kafka.client.KafkaTestUtils.{ pollNtimes }
+import zio.kafka.client.KafkaTestUtils.{ pollNtimes, produceMany }
 
 final case class ConnectionConfig(
   server: String,
@@ -20,6 +21,9 @@ final case class ConnectionConfig(
 
 sealed abstract class KafkaConsumer extends DefaultRuntime {
 
+  type KafkaZIOData[K, V] = Chunk[ConsumerRecord[K, V]]
+  type KafkaData          = KafkaZIOData[String, String]
+
   type WorkerType[A] = Consumer[String, String] => TaskR[Blocking with Clock, A]
 
   def settings(cfg: ConnectionConfig): ConsumerSettings
@@ -29,6 +33,8 @@ sealed abstract class KafkaConsumer extends DefaultRuntime {
   // def readBatch(cfg: ConnectionConfig): Chunk[String]
   def peekBatch(cfg: ConnectionConfig): Chunk[String]
   def readBatch(cfg: ConnectionConfig): Chunk[String]
+  def produce(cfg: ConnectionConfig): UIO[Unit]
+  def produceAndConsume(cfg: ConnectionConfig): KafkaData
 
 }
 
@@ -79,7 +85,7 @@ object KafkaConsumer extends KafkaConsumer {
     run(cfg) { consumer =>
       for {
         _     <- consumer.subscribe(Subscription.Topics(Set(cfg.topic)))
-        _     = println("subscribe done")
+        _     = println(s"subscribe done at host: $cfg.server, port: $cfg.port, topic: $cfg.topic")
         batch <- pollNtimes(5, consumer)
         _     = println("poll done")
         data  = batch.map(_.value)
@@ -103,6 +109,25 @@ object KafkaConsumer extends KafkaConsumer {
 
       } yield data
 
+    }
+
+  def produce(cfg: ConnectionConfig): UIO[Unit] =
+    run(cfg) { consumer =>
+      for {
+        _   <- consumer.subscribe(Subscription.Topics(Set(cfg.topic)))
+        kvs <- ZIO((1 to 5).toList.map(i => (s"key$i", s"msg$i")))
+        _   <- produceMany(cfg.topic, kvs)
+      } yield ZIO.unit
+    }
+
+  def produceAndConsume(cfg: ConnectionConfig): KafkaData =
+    run(cfg) { consumer =>
+      for {
+        _       <- consumer.subscribe(Subscription.Topics(Set(cfg.topic)))
+        kvs     <- ZIO((1 to 2).toList.map(i => (s"key$i", s"msg$i")))
+        _       <- produceMany(cfg.topic, kvs)
+        records <- pollNtimes(10, consumer)
+      } yield records
     }
 
 }
