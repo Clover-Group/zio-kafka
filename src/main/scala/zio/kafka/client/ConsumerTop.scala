@@ -1,42 +1,18 @@
 package kafkaconsumer
 
+import KafkaPkg._
+import KafkaTypes._
+
 import org.apache.kafka.common.serialization.{ Serde, Serdes }
 import org.apache.kafka.clients.consumer.ConsumerConfig
-import org.apache.kafka.clients.consumer.ConsumerRecord
+//import org.apache.kafka.clients.consumer.ConsumerRecord
 
-import zio.{ Chunk, DefaultRuntime, Task, TaskR, UIO, ZIO }
-import zio.blocking.Blocking
-import zio.clock.Clock
+//import zio.{ Chunk, DefaultRuntime, Task, TaskR, UIO, ZIO }
+import zio.{ Chunk, Task, UIO, ZIO }
 import zio.duration._
 
 import zio.kafka.client.{ Consumer, ConsumerSettings, Subscription }
 import zio.kafka.client.KafkaTestUtils.{ pollNtimes, produceMany }
-
-final case class ConnectionConfig(
-  server: String,
-  client: String,
-  group: String,
-  topic: String
-)
-
-sealed abstract class KafkaConsumer extends DefaultRuntime {
-
-  type KafkaZIOData[K, V] = Chunk[ConsumerRecord[K, V]]
-  type KafkaData          = KafkaZIOData[String, String]
-
-  type WorkerType[A] = Consumer[String, String] => TaskR[Blocking with Clock, A]
-
-  def settings(cfg: ConnectionConfig): ConsumerSettings
-  def run[A](cfg: ConnectionConfig)(r: WorkerType[A]): A
-  def subscribe(cfg: ConnectionConfig): Task[Unit]
-  // def unsubscribe(cfg: ConnectionConfig): Task[Unit]
-  // def readBatch(cfg: ConnectionConfig): Chunk[String]
-  def peekBatch(cfg: ConnectionConfig): Chunk[String]
-  def readBatch(cfg: ConnectionConfig): Chunk[String]
-  def produce(cfg: ConnectionConfig): UIO[Unit]
-  def produceAndConsume(cfg: ConnectionConfig): KafkaData
-
-}
 
 object KafkaConsumer extends KafkaConsumer {
 
@@ -63,23 +39,6 @@ object KafkaConsumer extends KafkaConsumer {
       } yield ZIO.effect(outcome)
 
     }
-
-  /* def unsubscribe(cfg: ConnectionConfig): Task[Unit] =
-    run(cfg) { consumer =>
-      for {
-        outcome <- consumer.unsubscribe
-      } yield ZIO.effect(outcome)
-    }
-
-  def readBatch(cfg: ConnectionConfig): Chunk[String] =
-    run(cfg) { consumer =>
-      (consumer.subscribe(Subscription.Topics(Set(cfg.topic))) *> pollNtimes(5, consumer)).map { recs =>
-        for {
-          tmp <- recs.map(_.value)
-        } yield tmp
-      }
-
-    } */
 
   def peekBatch(cfg: ConnectionConfig): Chunk[String] =
     run(cfg) { consumer =>
