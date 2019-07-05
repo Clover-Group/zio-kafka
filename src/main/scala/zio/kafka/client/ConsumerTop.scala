@@ -5,9 +5,7 @@ import KafkaTypes._
 
 import org.apache.kafka.common.serialization.{ Serde, Serdes }
 import org.apache.kafka.clients.consumer.ConsumerConfig
-//import org.apache.kafka.clients.consumer.ConsumerRecord
 
-//import zio.{ Chunk, DefaultRuntime, Task, TaskR, UIO, ZIO }
 import zio.{ Chunk, Task, UIO, ZIO }
 import zio.duration._
 
@@ -74,7 +72,7 @@ object KafkaConsumer extends KafkaConsumer {
     run(cfg) { consumer =>
       for {
         _   <- consumer.subscribe(Subscription.Topics(Set(cfg.topic)))
-        kvs <- ZIO((1 to 5).toList.map(i => (s"key$i", s"msg$i")))
+        kvs <- ZIO(genDummyData)
         _   <- produceMany(cfg.topic, kvs)
       } yield ZIO.unit
     }
@@ -83,7 +81,7 @@ object KafkaConsumer extends KafkaConsumer {
     run(cfg) { consumer =>
       for {
         _       <- consumer.subscribe(Subscription.Topics(Set(cfg.topic)))
-        kvs     <- ZIO((1 to 2).toList.map(i => (s"key$i", s"msg$i")))
+        kvs     <- ZIO(genDummyData)
         _       <- produceMany(cfg.topic, kvs)
         records <- pollNtimes(10, consumer)
       } yield records

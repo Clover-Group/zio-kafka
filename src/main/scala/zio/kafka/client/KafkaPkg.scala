@@ -7,6 +7,12 @@ import zio.clock.Clock
 
 import org.apache.kafka.clients.consumer.{ ConsumerRecord }
 
+/* final case class ConnectionConfig[F[_], A](
+  server: F[A],
+  client: A,
+  group : A,
+  topic : A
+) */
 final case class ConnectionConfig(
   server: String,
   client: String,
@@ -14,10 +20,17 @@ final case class ConnectionConfig(
   topic: String
 )
 
-object KafkaTypes {
+package object KafkaTypes {
 
   type KafkaZIOData[K, V] = Chunk[ConsumerRecord[K, V]]
   type KafkaData          = KafkaZIOData[String, String]
+  type DummyData          = List[(String, String)]
+
+  // Number of msgs to produce
+  val msgCount = 2
+
+  def genDummyData: DummyData =
+    (1 to msgCount).toList.map(i => (s"key$i", s"msg$i"))
 
 }
 
