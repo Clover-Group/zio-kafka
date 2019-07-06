@@ -9,13 +9,17 @@ import zio.duration._
 
 object KafkaTestUtils {
 
-  def produceOne(t: String, k: String, m: String): UIO[Unit] = ZIO.effectTotal {
+  def produceOne[A](t: String, m: A): UIO[Unit] = ZIO.effectTotal {
     import net.manub.embeddedkafka.Codecs._
-    EmbeddedKafka.publishToKafka(t, k, m)
+    EmbeddedKafka.publishToKafka[A](t, m)
+
   }
 
-  def produceMany(t: String, kvs: List[(String, String)]): UIO[Unit] =
-    UIO.foreach(kvs)(i => produceOne(t, i._1, i._2)).unit
+  /* def produceMany[F[_], A](t: String, m: F[A]): UIO[Unit] = //UIO.unit
+    UIO.foreach(kvs)(i => produceOne[A](t, m)).unit */
+
+  def produceMany[A](t: String, m: List[A]): UIO[Unit] = //UIO.unit
+    UIO.foreach(m)(i => produceOne[A](t, i)).unit
 
   def recordsFromAllTopics[K, V](
     pollResult: Map[TopicPartition, Chunk[ConsumerRecord[K, V]]]
