@@ -3,7 +3,7 @@ package zio.kafka.client
 import net.manub.embeddedkafka.EmbeddedKafka
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.TopicPartition
-import zio.{ Chunk, UIO, ZIO }
+import zio.{ Chunk, Task, UIO, ZIO }
 import zio.blocking.Blocking
 import zio.duration._
 
@@ -23,9 +23,9 @@ object KafkaTestUtils {
   // def produceMany[F[_] <: List, A](t: String, m: F[A]): UIO[Unit] = //UIO.unit
   // UIO.foreach(m)(i => produceOne(t, i._1, i._2)).unit
 
-  def produceChunk(t: String, data: Array[Byte]): UIO[Unit] = ZIO.effectTotal {
+  def produceChunk(t: String, data: Array[Byte]): Task[Unit] = ZIO.effect {
     import net.manub.embeddedkafka.Codecs._
-    EmbeddedKafka.publishToKafka(t, data)
+    EmbeddedKafka.publishToKafka[Array[Byte]](t, data)
   }
 
   def recordsFromAllTopics[K, V](
