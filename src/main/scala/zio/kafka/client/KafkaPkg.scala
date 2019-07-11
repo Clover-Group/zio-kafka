@@ -22,6 +22,7 @@ final case class ConnectionConfig(
 
 package object KafkaTypes {
 
+  type BArr               = Array[Byte]
   type KafkaZIOData[K, V] = Chunk[ConsumerRecord[K, V]]
   type KafkaData          = KafkaZIOData[String, String]
   type DummyData          = List[(String, String)]
@@ -31,6 +32,10 @@ package object KafkaTypes {
 
   def genDummyData: DummyData =
     (1 to msgCount).toList.map(i => (s"key$i", s"msg$i"))
+
+  object BArrEq extends cats.kernel.Eq[BArr] {
+    def eqv(x: Array[Byte], y: Array[Byte]): Boolean = java.util.Arrays.equals(x, y)
+  }
 
 }
 
