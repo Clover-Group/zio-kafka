@@ -7,13 +7,18 @@ import zio.clock.Clock
 
 import org.apache.kafka.clients.consumer.{ ConsumerRecord }
 
-/* final case class ConnectionConfig[F[_], A](
+/* final case class SlaveConfig[F[_], A](
   server: F[A],
   client: A,
   group : A,
   topic : A
 ) */
-final case class ConnectionConfig(
+final case class NetConfig(
+  kafkaPort: Int,
+  zooPort: Int
+)
+
+final case class SlaveConfig(
   server: String,
   client: String,
   group: String,
@@ -42,17 +47,17 @@ package object KafkaTypes {
 sealed abstract class KafkaBase extends DefaultRuntime
 
 abstract class KafkaConsumer extends KafkaBase {
-  import KafkaTypes._
+  // import KafkaTypes._
 
   type WorkerType[A] = Consumer[String, String] => TaskR[Blocking with Clock, A]
 
-  def settings(cfg: ConnectionConfig): ConsumerSettings
-  def run[A](cfg: ConnectionConfig)(r: WorkerType[A]): A
-  def subscribe(cfg: ConnectionConfig): Task[Unit]
-  def peekBatch(cfg: ConnectionConfig): Chunk[String]
-  def readBatch(cfg: ConnectionConfig): Chunk[String]
-  def produce(cfg: ConnectionConfig): UIO[Unit]
-  def produceAndConsume(cfg: ConnectionConfig): KafkaData
+  def settings(cfg: SlaveConfig): ConsumerSettings
+  def run[A](cfg: SlaveConfig)(r: WorkerType[A]): A
+  def subscribe(cfg: SlaveConfig): Task[Unit]
+  def peekBatch(cfg: SlaveConfig): Chunk[String]
+  def readBatch(cfg: SlaveConfig): Chunk[String]
+  def produce(cfg: SlaveConfig): UIO[Unit]
+  // def produceAndConsume(cfg: SlaveConfig): KafkaData
 
 }
 

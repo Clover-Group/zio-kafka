@@ -16,7 +16,7 @@ object KafkaConsumer extends KafkaConsumer {
 
   implicit val stringSerde: Serde[String] = Serdes.String()
 
-  def settings(cfg: ConnectionConfig): ConsumerSettings =
+  def settings(cfg: SlaveConfig): ConsumerSettings =
     ConsumerSettings(
       List(cfg.server),
       cfg.group,
@@ -25,12 +25,12 @@ object KafkaConsumer extends KafkaConsumer {
       Map(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG -> "earliest")
     )
 
-  def run[A](cfg: ConnectionConfig)(r: WorkerType[A]): A =
+  def run[A](cfg: SlaveConfig)(r: WorkerType[A]): A =
     unsafeRun(
       Consumer.make[String, String](settings(cfg)).use(r)
     )
 
-  def subscribe(cfg: ConnectionConfig): Task[Unit] =
+  def subscribe(cfg: SlaveConfig): Task[Unit] =
     run(cfg) { consumer =>
       for {
         outcome <- consumer.subscribe(Subscription.Topics(Set(cfg.topic)))
@@ -38,7 +38,7 @@ object KafkaConsumer extends KafkaConsumer {
 
     }
 
-  def peekBatch(cfg: ConnectionConfig): Chunk[String] =
+  def peekBatch(cfg: SlaveConfig): Chunk[String] =
     run(cfg) { consumer =>
       for {
         _     <- consumer.subscribe(Subscription.Topics(Set(cfg.topic)))
@@ -54,7 +54,7 @@ object KafkaConsumer extends KafkaConsumer {
 
     }
 
-  def readBatch(cfg: ConnectionConfig): Chunk[String] =
+  def readBatch(cfg: SlaveConfig): Chunk[String] =
     run(cfg) { consumer =>
       for {
         _     <- consumer.subscribe(Subscription.Topics(Set(cfg.topic)))
@@ -68,23 +68,23 @@ object KafkaConsumer extends KafkaConsumer {
 
     }
 
-  def produce(cfg: ConnectionConfig): UIO[Unit] =
-    run(cfg) { consumer =>
+  def produce(cfg: SlaveConfig): UIO[Unit] = UIO.unit
+  /* run(cfg) { consumer =>
       for {
         _   <- consumer.subscribe(Subscription.Topics(Set(cfg.topic)))
         kvs <- ZIO(genDummyData)
         _   <- produceMany(cfg.topic, kvs)
       } yield ZIO.unit
-    }
+    } */
 
-  def produceAndConsume(cfg: ConnectionConfig): KafkaData =
-    run(cfg) { consumer =>
+  //def produceAndConsume(cfg: SlaveConfig): KafkaData = UIO.unit
+  /* run(cfg) { consumer =>
       for {
         _       <- consumer.subscribe(Subscription.Topics(Set(cfg.topic)))
         kvs     <- ZIO(genDummyData)
         _       <- produceMany(cfg.topic, kvs)
         records <- pollNtimes(10, consumer)
       } yield records
-    }
+    } */
 
 }

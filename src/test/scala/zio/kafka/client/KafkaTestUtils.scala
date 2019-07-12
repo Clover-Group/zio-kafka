@@ -1,21 +1,24 @@
 package zio.kafka.client
 
-import net.manub.embeddedkafka.EmbeddedKafka
+import net.manub.embeddedkafka.{ EmbeddedKafka, EmbeddedKafkaConfig }
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.TopicPartition
 import zio.{ Chunk, Task, UIO, ZIO }
 import zio.blocking.Blocking
 import zio.duration._
 
+import KafkaPkg.{ NetConfig }
+
 object KafkaTestUtils {
 
-  def produceOne(t: String, k: String, m: String): UIO[Unit] = ZIO.effectTotal {
-    import net.manub.embeddedkafka.Codecs._
-    EmbeddedKafka.publishToKafka(t, k, m)
+  def produceOne(cfg: NetConfig, t: String, k: String, m: String): UIO[Unit] = ZIO.effectTotal {
+    import net.manub.embeddedkafka.Codecs.{ stringSerializer }
+    val lcfg = EmbeddedKafkaConfig(kafkaPort = cfg.kafkaPort, zooKeeperPort = cfg.zooPort)
+    EmbeddedKafka.publishToKafka(t, k, m)(lcfg, stringSerializer, stringSerializer)
   }
 
-  def produceMany(t: String, kvs: List[(String, String)]): UIO[Unit] =
-    UIO.foreach(kvs)(i => produceOne(t, i._1, i._2)).unit
+  def produceMany(cfg: NetConfig, t: String, kvs: List[(String, String)]): UIO[Unit] =
+    UIO.foreach(kvs)(i => produceOne(cfg, t, i._1, i._2)).unit
 
   // def produceMany[F[_], A](t: String, m: F[A]): UIO[Unit] = //UIO.unit
   // UIO.foreach(kvs)(i => produceOne[A](t, m)).unit
@@ -23,9 +26,11 @@ object KafkaTestUtils {
   // def produceMany[F[_] <: List, A](t: String, m: F[A]): UIO[Unit] = //UIO.unit
   // UIO.foreach(m)(i => produceOne(t, i._1, i._2)).unit
 
-  def produceChunk(t: String, data: Array[Byte]): Task[Unit] = ZIO.effect {
-    import net.manub.embeddedkafka.Codecs._
-    EmbeddedKafka.publishToKafka[Array[Byte]](t, data)
+  def produceChunk(cfg: NetConfig, t: String, data: Array[Byte]): Task[Unit] = ZIO.effect {
+    import net.manub.embeddedkafka.Codecs.{ nullSerializer }
+    // implicit val cfg = EmbeddedKafkaConfig(kafkaPort = port)
+    val lcfg = EmbeddedKafkaConfig(kafkaPort = cfg.kafkaPort, zooKeeperPort = cfg.zooPort)
+    EmbeddedKafka.publishToKafka[Array[Byte]](t, data)(lcfg, nullSerializer)
   }
 
   def recordsFromAllTopics[K, V](
