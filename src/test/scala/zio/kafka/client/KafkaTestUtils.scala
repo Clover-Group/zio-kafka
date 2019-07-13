@@ -8,30 +8,29 @@ import zio.blocking.Blocking
 import zio.duration._
 
 import KafkaPkg.{ NetConfig }
+// import cats.Functor
 
 object KafkaTestUtils {
 
-  def produceOne(cfg: NetConfig, t: String, k: String, m: String): UIO[Unit] = ZIO.effectTotal {
-    import net.manub.embeddedkafka.Codecs.{ stringSerializer }
+  type BArr = Array[Byte]
+
+  private def produceOne[A](cfg: NetConfig, t: String, data: Chunk[A]): UIO[Unit] = ZIO.effectTotal {
+
+    import net.manub.embeddedkafka.Codecs.{ nullSerializer, stringSerializer }
     val lcfg = EmbeddedKafkaConfig(kafkaPort = cfg.kafkaPort, zooKeeperPort = cfg.zooPort)
-    EmbeddedKafka.publishToKafka(t, k, m)(lcfg, stringSerializer, stringSerializer)
+
+    println("produceOne called")
+    data match {
+      case din: Chunk[String] => din.map(d => EmbeddedKafka.publishToKafka[String](t, d)(lcfg, stringSerializer))
+      case din: Chunk[BArr]   => din.map(d => EmbeddedKafka.publishToKafka[BArr](t, d)(lcfg, nullSerializer))
+      case _                  => ZIO.fail("Unknown input type")
+
+    }
+    println("produceOne returned")
   }
 
-  def produceMany(cfg: NetConfig, t: String, kvs: List[(String, String)]): UIO[Unit] =
-    UIO.foreach(kvs)(i => produceOne(cfg, t, i._1, i._2)).unit
-
-  // def produceMany[F[_], A](t: String, m: F[A]): UIO[Unit] = //UIO.unit
-  // UIO.foreach(kvs)(i => produceOne[A](t, m)).unit
-
-  // def produceMany[F[_] <: List, A](t: String, m: F[A]): UIO[Unit] = //UIO.unit
-  // UIO.foreach(m)(i => produceOne(t, i._1, i._2)).unit
-
-  def produceChunk(cfg: NetConfig, t: String, data: Array[Byte]): Task[Unit] = ZIO.effect {
-    import net.manub.embeddedkafka.Codecs.{ nullSerializer }
-    // implicit val cfg = EmbeddedKafkaConfig(kafkaPort = port)
-    val lcfg = EmbeddedKafkaConfig(kafkaPort = cfg.kafkaPort, zooKeeperPort = cfg.zooPort)
-    EmbeddedKafka.publishToKafka[Array[Byte]](t, data)(lcfg, nullSerializer)
-  }
+  def produce[A](cfg: NetConfig, t: String, data: Chunk[A]): UIO[Unit] =
+    data.mapM_(_ => produceOne[A](cfg, t, data))
 
   def recordsFromAllTopics[K, V](
     pollResult: Map[TopicPartition, Chunk[ConsumerRecord[K, V]]]

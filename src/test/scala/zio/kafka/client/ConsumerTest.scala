@@ -1,6 +1,6 @@
 package zio.kafka.client
 
-import com.typesafe.scalalogging.LazyLogging
+/* import com.typesafe.scalalogging.LazyLogging
 import net.manub.embeddedkafka.EmbeddedKafka
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.TopicPartition
@@ -219,4 +219,4 @@ class ConsumerTest extends WordSpecLike with Matchers with LazyLogging with Defa
     }
 
   }
-}
+} */

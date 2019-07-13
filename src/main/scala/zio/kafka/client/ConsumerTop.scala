@@ -1,7 +1,7 @@
 package kafkaconsumer
 
 import KafkaPkg._
-import KafkaTypes._
+// import KafkaTypes._
 
 import org.apache.kafka.common.serialization.{ Serde, Serdes }
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -10,7 +10,7 @@ import zio.{ Chunk, Task, UIO, ZIO }
 import zio.duration._
 
 import zio.kafka.client.{ Consumer, ConsumerSettings, Subscription }
-import zio.kafka.client.KafkaTestUtils.{ pollNtimes, produceMany }
+import zio.kafka.client.KafkaTestUtils.{ pollNtimes }
 
 object KafkaConsumer extends KafkaConsumer {
 

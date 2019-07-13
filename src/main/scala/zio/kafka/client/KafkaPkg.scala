@@ -6,6 +6,8 @@ import zio.blocking.Blocking
 import zio.clock.Clock
 
 import org.apache.kafka.clients.consumer.{ ConsumerRecord }
+import cats.kernel.{ Eq }
+import cats.{ Id }
 
 /* final case class SlaveConfig[F[_], A](
   server: F[A],
@@ -30,15 +32,15 @@ package object KafkaTypes {
   type BArr               = Array[Byte]
   type KafkaZIOData[K, V] = Chunk[ConsumerRecord[K, V]]
   type KafkaData          = KafkaZIOData[String, String]
-  type DummyData          = List[(String, String)]
+  type DummyData[A]       = Id[A]
 
   // Number of msgs to produce
-  val msgCount = 2
+  val msgCount = 1
 
-  def genDummyData: DummyData =
-    (1 to msgCount).toList.map(i => (s"key$i", s"msg$i"))
+  def genDummyListString: List[String] =
+    (1 to msgCount).toList.map(i => s"msg$i")
 
-  object BArrEq extends cats.kernel.Eq[BArr] {
+  object BArrEq extends Eq[BArr] {
     def eqv(x: Array[Byte], y: Array[Byte]): Boolean = java.util.Arrays.equals(x, y)
   }
 
