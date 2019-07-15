@@ -18,7 +18,7 @@ object KafkaTestUtils {
     def apply(cfg: NetConfig, t: String, data: Chunk[A]): UIO[Unit]
   }
 
-  object HowToProduce {
+  /* object HowToProduce {
 
     def apply[A](cfg: NetConfig, t: String, data: Chunk[A]): UIO[Unit] = ZIO.effectTotal {
       import net.manub.embeddedkafka.Codecs.{ nullSerializer, stringSerializer }
@@ -35,26 +35,27 @@ object KafkaTestUtils {
 
     }
 
-  }
-  /* private def produceOne[A](cfg: NetConfig, t: String, data: Chunk[A]): UIO[Unit] = ZIO.effectTotal {
+  } */
+  private def produceOne[A](cfg: NetConfig, t: String, data: Chunk[A]): UIO[Unit] = ZIO.effectTotal {
 
     import net.manub.embeddedkafka.Codecs.{ nullSerializer, stringSerializer }
     val lcfg = EmbeddedKafkaConfig(kafkaPort = cfg.kafkaPort, zooKeeperPort = cfg.zooPort)
 
     println("produceOne called")
     data match {
-      case din: Chunk[String] => din.map(d => EmbeddedKafka.publishToKafka[String](t, d)(lcfg, stringSerializer))
-      case din: Chunk[BArr]   => din.map(d => EmbeddedKafka.publishToKafka[BArr](t, d)(lcfg, nullSerializer))
-      case _                  => ZIO.fail("Unknown input type")
+      // case din: Chunk[String] => din.map(d => EmbeddedKafka.publishToKafka[String](t, d)(lcfg, stringSerializer))
+      case din: Chunk[BArr] => din.map(d => EmbeddedKafka.publishToKafka[BArr](t, d)(lcfg, nullSerializer))
+      case _                => ZIO.fail("Unknown input type")
 
     }
     println("produceOne returned")
-  } */
-  private def produceOne[A](cfg: NetConfig, t: String, data: Chunk[A])(htp: HowToProduce[A]): UIO[Unit] =
-    htp(cfg, t, data)
+  }
+  /* private def produceOne[A](cfg: NetConfig, t: String, data: Chunk[A])(htp: HowToProduce[A]): UIO[Unit] =
+    htp(cfg, t, data) */
 
   def produce[A](cfg: NetConfig, t: String, data: Chunk[A]): UIO[Unit] =
-    data.mapM_(_ => produceOne[A](cfg, t, data)(HowToProduce[A]))
+    // data.mapM_(_ => produceOne[A](cfg, t, data)(HowToProduce[A]))
+    data.mapM_(_ => produceOne[A](cfg, t, data))
 
   def recordsFromAllTopics[K, V](
     pollResult: Map[TopicPartition, Chunk[ConsumerRecord[K, V]]]

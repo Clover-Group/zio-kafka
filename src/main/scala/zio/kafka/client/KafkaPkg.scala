@@ -35,10 +35,13 @@ package object KafkaTypes {
   type DummyData[A]       = Id[A]
 
   // Number of msgs to produce
-  val msgCount = 1
+  val msgCount = 2
 
-  def genDummyListString: List[String] =
-    (1 to msgCount).toList.map(i => s"msg$i")
+  def genDummyListString: List[String] = {
+    val res = (1 to msgCount).toList.map(i => s"msg$i")
+    res.foreach(println)
+    res
+  }
 
   object BArrEq extends Eq[BArr] {
     def eqv(x: Array[Byte], y: Array[Byte]): Boolean = java.util.Arrays.equals(x, y)
