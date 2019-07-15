@@ -3,59 +3,52 @@ package zio.kafka.client
 import net.manub.embeddedkafka.{ EmbeddedKafka, EmbeddedKafkaConfig }
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.TopicPartition
-import zio.{ Chunk, Task, UIO, ZIO }
+import zio.{ Chunk, Task, ZIO }
+// import zio.console.{ putStrLn }
 import zio.blocking.Blocking
 import zio.duration._
 
 import KafkaPkg.{ NetConfig }
-// import cats.Functor
 
 object KafkaTestUtils {
 
   type BArr = Array[Byte]
 
-  trait HowToProduce[A] {
-    def apply(cfg: NetConfig, t: String, data: Chunk[A]): UIO[Unit]
+  sealed abstract class BackProducer[A] {
+    def apply(cfg: NetConfig, t: String, data: A): Task[Unit]
   }
 
-  /* object HowToProduce {
+  object BackProducer {
 
-    def apply[A](cfg: NetConfig, t: String, data: Chunk[A]): UIO[Unit] = ZIO.effectTotal {
-      import net.manub.embeddedkafka.Codecs.{ nullSerializer, stringSerializer }
-      val lcfg = EmbeddedKafkaConfig(kafkaPort = cfg.kafkaPort, zooKeeperPort = cfg.zooPort)
+    implicit val stringProducer = new BackProducer[String] {
 
-      println("produceOne called")
-      data match {
-        case din: Chunk[String] => din.map(d => EmbeddedKafka.publishToKafka[String](t, d)(lcfg, stringSerializer))
-        case din: Chunk[BArr]   => din.map(d => EmbeddedKafka.publishToKafka[BArr](t, d)(lcfg, nullSerializer))
-        case _                  => ZIO.fail("Unknown input type")
+      def apply(cfg: NetConfig, t: String, data: String): Task[Unit] = ZIO.effect {
+        println("string apply called")
 
+        import net.manub.embeddedkafka.Codecs.{ stringSerializer }
+        val lcfg = EmbeddedKafkaConfig(kafkaPort = cfg.kafkaPort, zooKeeperPort = cfg.zooPort)
+
+        EmbeddedKafka.publishToKafka[String](t, data)(lcfg, stringSerializer)
+        println("string apply returned")
       }
-      println("produceOne returned")
-
     }
 
-  } */
-  private def produceOne[A](cfg: NetConfig, t: String, data: Chunk[A]): UIO[Unit] = ZIO.effectTotal {
+    implicit val BarrProducer = new BackProducer[BArr] {
 
-    import net.manub.embeddedkafka.Codecs.{ nullSerializer, stringSerializer }
-    val lcfg = EmbeddedKafkaConfig(kafkaPort = cfg.kafkaPort, zooKeeperPort = cfg.zooPort)
+      def apply(cfg: NetConfig, t: String, data: BArr): Task[Unit] = ZIO.effect {
+        println("barr apply called")
 
-    println("produceOne called")
-    data match {
-      // case din: Chunk[String] => din.map(d => EmbeddedKafka.publishToKafka[String](t, d)(lcfg, stringSerializer))
-      case din: Chunk[BArr] => din.map(d => EmbeddedKafka.publishToKafka[BArr](t, d)(lcfg, nullSerializer))
-      case _                => ZIO.fail("Unknown input type")
+        import net.manub.embeddedkafka.Codecs.{ nullSerializer }
+        val lcfg = EmbeddedKafkaConfig(kafkaPort = cfg.kafkaPort, zooKeeperPort = cfg.zooPort)
 
+        EmbeddedKafka.publishToKafka[BArr](t, data)(lcfg, nullSerializer)
+        println("barr apply returned")
+      }
     }
-    println("produceOne returned")
   }
-  /* private def produceOne[A](cfg: NetConfig, t: String, data: Chunk[A])(htp: HowToProduce[A]): UIO[Unit] =
-    htp(cfg, t, data) */
 
-  def produce[A](cfg: NetConfig, t: String, data: Chunk[A]): UIO[Unit] =
-    // data.mapM_(_ => produceOne[A](cfg, t, data)(HowToProduce[A]))
-    data.mapM_(_ => produceOne[A](cfg, t, data))
+  def produce[A](cfg: NetConfig, t: String, data: Chunk[A])(implicit prod: BackProducer[A]): Task[Unit] =
+    data.mapM_(r => prod(cfg, t, r))
 
   def recordsFromAllTopics[K, V](
     pollResult: Map[TopicPartition, Chunk[ConsumerRecord[K, V]]]

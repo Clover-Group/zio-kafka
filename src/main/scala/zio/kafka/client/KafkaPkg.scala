@@ -9,12 +9,6 @@ import org.apache.kafka.clients.consumer.{ ConsumerRecord }
 import cats.kernel.{ Eq }
 import cats.{ Id }
 
-/* final case class SlaveConfig[F[_], A](
-  server: F[A],
-  client: A,
-  group : A,
-  topic : A
-) */
 final case class NetConfig(
   kafkaPort: Int,
   zooPort: Int
@@ -39,7 +33,7 @@ package object KafkaTypes {
 
   def genDummyListString: List[String] = {
     val res = (1 to msgCount).toList.map(i => s"msg$i")
-    res.foreach(println)
+    // res.foreach(println)
     res
   }
 
