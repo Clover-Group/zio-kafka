@@ -1,6 +1,7 @@
 val mainScala    = "2.12.8"
 val allScala     = Seq("2.11.12", mainScala)
 val KafkaVersion = "2.3.0"
+val ZioVersion   = "1.0.0-RC10-1"
 
 organization := "dev.zio"
 homepage := Some(url("https://github.com/zio/zio-kafka"))
@@ -27,7 +28,7 @@ developers := List(
 )
 
 libraryDependencies ++= Seq(
-  "dev.zio"                 %% "zio"            % "1.0.0-RC10-1",
+  "dev.zio"                 %% "zio"            % ZioVersion,
   "org.apache.kafka"        % "kafka-clients"   % KafkaVersion,
   "io.github.embeddedkafka" %% "embedded-kafka" % KafkaVersion,
   "org.scalatest"           %% "scalatest"      % "3.0.5" % "test",

@@ -7,12 +7,6 @@ import zio.clock.Clock
 
 import org.apache.kafka.clients.consumer.{ ConsumerRecord }
 
-/* final case class ConnectionConfig[F[_], A](
-  server: F[A],
-  client: A,
-  group : A,
-  topic : A
-) */
 final case class ConnectionConfig(
   server: String,
   client: String,
@@ -33,9 +27,9 @@ package object KafkaTypes {
   def genDummyData: DummyData =
     (1 to msgCount).toList.map(i => (s"key$i", s"msg$i"))
 
-  object BArrEq extends cats.kernel.Eq[BArr] {
-    def eqv(x: Array[Byte], y: Array[Byte]): Boolean = java.util.Arrays.equals(x, y)
-  }
+  //object BArrEq extends cats.kernel.Eq[BArr] {
+  def eqv(x: BArr, y: BArr): Boolean = java.util.Arrays.equals(x, y)
+  //}
 
 }
 
