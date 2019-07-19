@@ -6,8 +6,6 @@ import zio.blocking.Blocking
 import zio.clock.Clock
 
 import org.apache.kafka.clients.consumer.{ ConsumerRecord }
-import cats.kernel.{ Eq }
-import cats.{ Id }
 
 final case class NetConfig(
   kafkaPort: Int,
@@ -26,7 +24,6 @@ package object KafkaTypes {
   type BArr               = Array[Byte]
   type KafkaZIOData[K, V] = Chunk[ConsumerRecord[K, V]]
   type KafkaData          = KafkaZIOData[String, String]
-  type DummyData[A]       = Id[A]
 
   // Number of msgs to produce
   val msgCount = 2
@@ -37,9 +34,7 @@ package object KafkaTypes {
     res
   }
 
-  object BArrEq extends Eq[BArr] {
-    def eqv(x: Array[Byte], y: Array[Byte]): Boolean = java.util.Arrays.equals(x, y)
-  }
+  def eqv(x: BArr, y: BArr): Boolean = java.util.Arrays.equals(x, y)
 
 }
 
