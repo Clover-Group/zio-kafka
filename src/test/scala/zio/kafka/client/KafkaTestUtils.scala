@@ -23,26 +23,26 @@ object KafkaTestUtils {
     implicit val stringProducer = new BackProducer[String] {
 
       def apply(cfg: NetConfig, t: String, data: String): Task[Unit] = ZIO.effect {
-        println("string apply called")
+        // println("string apply called")
 
         import net.manub.embeddedkafka.Codecs.{ stringSerializer }
         val lcfg = EmbeddedKafkaConfig(kafkaPort = cfg.kafkaPort, zooKeeperPort = cfg.zooPort)
 
         EmbeddedKafka.publishToKafka[String](t, data)(lcfg, stringSerializer)
-        println("string apply returned")
+        // println("string apply returned")
       }
     }
 
     implicit val BarrProducer = new BackProducer[BArr] {
 
       def apply(cfg: NetConfig, t: String, data: BArr): Task[Unit] = ZIO.effect {
-        println("barr apply called")
+        // println("barr apply called")
 
         import net.manub.embeddedkafka.Codecs.{ nullSerializer }
         val lcfg = EmbeddedKafkaConfig(kafkaPort = cfg.kafkaPort, zooKeeperPort = cfg.zooPort)
 
         EmbeddedKafka.publishToKafka[BArr](t, data)(lcfg, nullSerializer)
-        println("barr apply returned")
+        // println("barr apply returned")
       }
     }
   }
