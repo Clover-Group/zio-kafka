@@ -1,4 +1,4 @@
-val mainScala    = "2.12.9"
+val mainScala    = "2.12.8"
 val allScala     = Seq("2.11.12", mainScala)
 val KafkaVersion = "2.3.0"
 val ZioVersion   = "1.0.0-RC11-1"
