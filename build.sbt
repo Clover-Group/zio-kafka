@@ -1,7 +1,7 @@
-val mainScala    = "2.12.8"
+val mainScala    = "2.12.9"
 val allScala     = Seq("2.11.12", mainScala)
 val KafkaVersion = "2.3.0"
-val ZioVersion   = "1.0.0-RC10-1"
+val ZioVersion   = "1.0.0-RC11-1"
 
 organization := "dev.zio"
 homepage := Some(url("https://github.com/zio/zio-kafka"))

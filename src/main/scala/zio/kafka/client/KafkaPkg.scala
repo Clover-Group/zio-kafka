@@ -1,6 +1,6 @@
 package KafkaPkg
 
-import zio.{ Chunk, DefaultRuntime, Task, TaskR, UIO }
+import zio.{ Chunk, DefaultRuntime, RIO, Task, UIO }
 import zio.kafka.client.{ Consumer, ConsumerSettings }
 import zio.blocking.Blocking
 import zio.clock.Clock
@@ -43,7 +43,7 @@ sealed abstract class KafkaBase extends DefaultRuntime
 abstract class KafkaConsumer extends KafkaBase {
   // import KafkaTypes._
 
-  type WorkerType[A] = Consumer[String, String] => TaskR[Blocking with Clock, A]
+  type WorkerType[A] = Consumer[String, String] => RIO[Blocking with Clock, A]
 
   def settings(cfg: SlaveConfig): ConsumerSettings
   def run[A](cfg: SlaveConfig)(r: WorkerType[A]): A
