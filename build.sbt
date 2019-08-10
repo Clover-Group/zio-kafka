@@ -78,6 +78,10 @@ scalacOptions ++= Seq(
   case _ => Nil
 })
 
+scalacOptions --= Seq(
+  "-Xfatal-warnings"
+)
+
 fork in run := true
 
 crossScalaVersions := allScala

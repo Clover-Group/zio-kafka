@@ -12,7 +12,8 @@ import KafkaPkg.{ NetConfig }
 
 object KafkaTestUtils {
 
-  type BArr = Array[Byte]
+  type BArr   = Array[Byte]
+  type KeyVal = List[(String, String)]
 
   sealed abstract class BackProducer[A] {
     def apply(cfg: NetConfig, t: String, data: A): Task[Unit]
@@ -23,26 +24,36 @@ object KafkaTestUtils {
     implicit val stringProducer = new BackProducer[String] {
 
       def apply(cfg: NetConfig, t: String, data: String): Task[Unit] = ZIO.effect {
-        // println("string apply called")
 
         import net.manub.embeddedkafka.Codecs.{ stringSerializer }
         val lcfg = EmbeddedKafkaConfig(kafkaPort = cfg.kafkaPort, zooKeeperPort = cfg.zooPort)
 
         EmbeddedKafka.publishToKafka[String](t, data)(lcfg, stringSerializer)
-        // println("string apply returned")
+      }
+    }
+
+    implicit val keyValStringProducer = new BackProducer[KeyVal] {
+
+      def apply(cfg: NetConfig, t: String, data: KeyVal): Task[Unit] = ZIO.effect {
+
+        import net.manub.embeddedkafka.Codecs.{ stringSerializer }
+        val lcfg = EmbeddedKafkaConfig(kafkaPort = cfg.kafkaPort, zooKeeperPort = cfg.zooPort)
+
+        data.foreach { i =>
+          EmbeddedKafka.publishToKafka(t, i._1, i._2)(lcfg, stringSerializer, stringSerializer)
+        }
+
       }
     }
 
     implicit val BarrProducer = new BackProducer[BArr] {
 
       def apply(cfg: NetConfig, t: String, data: BArr): Task[Unit] = ZIO.effect {
-        // println("barr apply called")
 
         import net.manub.embeddedkafka.Codecs.{ nullSerializer }
         val lcfg = EmbeddedKafkaConfig(kafkaPort = cfg.kafkaPort, zooKeeperPort = cfg.zooPort)
 
         EmbeddedKafka.publishToKafka[BArr](t, data)(lcfg, nullSerializer)
-        // println("barr apply returned")
       }
     }
   }

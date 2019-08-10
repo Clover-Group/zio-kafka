@@ -14,8 +14,7 @@ case class ConsumerSettings(
     Map(
       ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG -> bootstrapServers.mkString(","),
       ConsumerConfig.GROUP_ID_CONFIG          -> groupId,
-      ConsumerConfig.CLIENT_ID_CONFIG         -> clientId,
-      ConsumerConfig.AUTO_OFFSET_RESET_CONFIG -> "earliest"
+      ConsumerConfig.CLIENT_ID_CONFIG         -> clientId
     ) ++
       extraDriverSettings
 
