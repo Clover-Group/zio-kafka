@@ -1,6 +1,6 @@
 package zio.kafka.client
 
-/* import com.typesafe.scalalogging.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import net.manub.embeddedkafka.EmbeddedKafka
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.TopicPartition
@@ -71,7 +71,7 @@ class ConsumerTest extends WordSpecLike with Matchers with LazyLogging with Defa
           c1RebalanceEvidence <- Ref.make[List[Rebalance]](List())
           c2RebalanceEvidence <- Ref.make[List[Rebalance]](List())
           _                   <- ZIO.effect(EmbeddedKafka.createCustomTopic(topic, partitions = 4))
-          _                   <- produceMany(topic, (1 to nrMessagesPerBatch).toList.map(i => (s"key$i", s"msg$i")))
+          _                   <- produce[String](topic, (1 to nrMessagesPerBatch).toList.map(i => (s"key$i", s"msg$i")))
           _ <- {
             for {
               c1 <- Consumer.make[String, String](settings(groupId, "client1"))
@@ -84,7 +84,7 @@ class ConsumerTest extends WordSpecLike with Matchers with LazyLogging with Defa
                       reb => log(s"rebalancing c1 with $reb") *> c1RebalanceEvidence.update(reb :: _).unit
                     )
                 _ <- pollNtimes(20, c1)
-                _ <- produceMany(topic, (1 to nrMessagesPerBatch).toList.map(i => (s"key$i", s"msg$i")))
+                _ <- produce[String](topic, (1 to nrMessagesPerBatch).toList.map(i => (s"key$i", s"msg$i")))
                 _ <- c2
                       .subscribeWith(subscription)(
                         reb => log(s"rebalancing c2 with $reb") *> c2RebalanceEvidence.update(reb :: _).unit
@@ -123,100 +123,100 @@ class ConsumerTest extends WordSpecLike with Matchers with LazyLogging with Defa
       }
     }
 
-    "poll" should {
-      "receive messages produced on the topic" in runWithConsumer("group150", "client150") { consumer =>
-        for {
-          _       <- consumer.subscribe(Subscription.Topics(Set("topic150")))
-          kvs     <- ZIO((1 to 5).toList.map(i => (s"key$i", s"msg$i")))
-          _       <- produceMany("topic150", kvs)
-          records <- pollNtimes(10, consumer)
-          _ <- ZIO.effectTotal(records.map { r =>
-                (r.key, r.value)
-              } shouldEqual Chunk.fromIterable(kvs))
-        } yield ()
-      }
-    }
+    //"poll" should {
+    //  "receive messages produced on the topic" in runWithConsumer("group150", "client150") { consumer =>
+    //    for {
+    //      _       <- consumer.subscribe(Subscription.Topics(Set("topic150")))
+    //      kvs     <- ZIO((1 to 5).toList.map(i => (s"key$i", s"msg$i")))
+    //      _       <- produceMany("topic150", kvs)
+    //      records <- pollNtimes(10, consumer)
+    //      _ <- ZIO.effectTotal(records.map { r =>
+    //            (r.key, r.value)
+    //          } shouldEqual Chunk.fromIterable(kvs))
+    //    } yield ()
+    //  }
+    //}
 
-    "pause and resume" should {
-      "stop receiving messages on the subscribed topic during the pause, and then resume" in runWithConsumer(
-        "group250",
-        "client250"
-      ) { consumer =>
-        for {
-          _        <- consumer.subscribe(Subscription.Topics(Set("topic250")))
-          kv       <- ZIO((1 to 5).toList)
-          _        <- ZIO.foreach(kv.map(i => (s"key$i", s"msg$i")))(i => produceOne("topic250", i._1, i._2))
-          records1 <- pollNtimes(10, consumer)
-          _        <- consumer.pause(Set(new TopicPartition("topic250", 0)))
-          _        <- produceMany("topic250", kv.map(_ * 10).map(i => (s"key$i", s"msg$i")))
-          records2 <- pollNtimes(10, consumer)
-          _        <- consumer.resume(Set(new TopicPartition("topic250", 0)))
-          records3 <- pollNtimes(10, consumer)
-          _ <- ZIO.effectTotal {
-                records1.map { r =>
-                  (r.key, r.value)
-                } shouldEqual Chunk.fromIterable(kv.map(i => (s"key$i", s"msg$i")))
-                records2.map { r =>
-                  (r.key, r.value)
-                } shouldEqual Chunk.empty
-                records3.map { r =>
-                  (r.key, r.value)
-                } shouldEqual Chunk.fromIterable(kv.map(_ * 10).map(i => (s"key$i", s"msg$i")))
-              }
-        } yield ()
+    //"pause and resume" should {
+    //  "stop receiving messages on the subscribed topic during the pause, and then resume" in runWithConsumer(
+    //    "group250",
+    //    "client250"
+    //  ) { consumer =>
+    //    for {
+    //      _        <- consumer.subscribe(Subscription.Topics(Set("topic250")))
+    //      kv       <- ZIO((1 to 5).toList)
+    //      _        <- ZIO.foreach(kv.map(i => (s"key$i", s"msg$i")))(i => produceOne("topic250", i._1, i._2))
+    //      records1 <- pollNtimes(10, consumer)
+    //      _        <- consumer.pause(Set(new TopicPartition("topic250", 0)))
+    //      _        <- produceMany("topic250", kv.map(_ * 10).map(i => (s"key$i", s"msg$i")))
+    //      records2 <- pollNtimes(10, consumer)
+    //      _        <- consumer.resume(Set(new TopicPartition("topic250", 0)))
+    //      records3 <- pollNtimes(10, consumer)
+    //      _ <- ZIO.effectTotal {
+    //            records1.map { r =>
+    //              (r.key, r.value)
+    //            } shouldEqual Chunk.fromIterable(kv.map(i => (s"key$i", s"msg$i")))
+    //            records2.map { r =>
+    //              (r.key, r.value)
+    //            } shouldEqual Chunk.empty
+    //            records3.map { r =>
+    //              (r.key, r.value)
+    //            } shouldEqual Chunk.fromIterable(kv.map(_ * 10).map(i => (s"key$i", s"msg$i")))
+    //          }
+    //    } yield ()
 
-      }
-    }
+    //  }
+    //}
 
-    "seek" should {
-      "seek to beginning" in runWithConsumer("group350", "client350") { consumer =>
-        for {
-          kv <- ZIO((1 to 5).toList)
-          _  <- ZIO.foreach(kv.map(i => (s"key$i", s"msg$i")))(i => produceOne("topic350", i._1, i._2))
-          _  <- consumer.subscribe(Subscription.Topics(Set("topic350")))
-          _  <- consumer.poll(1.second).repeat(Schedule.spaced(1.second) && Schedule.recurs(2))
+    //"seek" should {
+    //  "seek to beginning" in runWithConsumer("group350", "client350") { consumer =>
+    //    for {
+    //      kv <- ZIO((1 to 5).toList)
+    //      _  <- ZIO.foreach(kv.map(i => (s"key$i", s"msg$i")))(i => produceOne("topic350", i._1, i._2))
+    //      _  <- consumer.subscribe(Subscription.Topics(Set("topic350")))
+    //      _  <- consumer.poll(1.second).repeat(Schedule.spaced(1.second) && Schedule.recurs(2))
 
-          _        <- consumer.seekToBeginning(Set(new TopicPartition("topic350", 0)))
-          records1 <- pollNtimes(10, consumer)
-          _ <- ZIO.effectTotal {
-                records1.map { r =>
-                  (r.key, r.value)
-                } shouldEqual Chunk.fromIterable(kv.map(i => (s"key$i", s"msg$i")))
-              }
-        } yield ()
-      }
+    //      _        <- consumer.seekToBeginning(Set(new TopicPartition("topic350", 0)))
+    //      records1 <- pollNtimes(10, consumer)
+    //      _ <- ZIO.effectTotal {
+    //            records1.map { r =>
+    //              (r.key, r.value)
+    //            } shouldEqual Chunk.fromIterable(kv.map(i => (s"key$i", s"msg$i")))
+    //          }
+    //    } yield ()
+    //  }
 
-      "seek to end" in runWithConsumer("group400", "client400") { consumer =>
-        for {
-          kv       <- ZIO((1 to 5).toList)
-          _        <- ZIO.foreach(kv.map(i => (s"key$i", s"msg$i")))(i => produceOne("topic350", i._1, i._2))
-          _        <- consumer.subscribe(Subscription.Topics(Set("topic350")))
-          _        <- consumer.poll(1.second).repeat(Schedule.spaced(1.second) && Schedule.recurs(2))
-          _        <- consumer.seekToEnd(Set(new TopicPartition("topic350", 0)))
-          records1 <- pollNtimes(10, consumer)
-          _ <- ZIO.effectTotal {
-                records1 shouldEqual Chunk.empty
-              }
-        } yield ()
-      }
+    //  "seek to end" in runWithConsumer("group400", "client400") { consumer =>
+    //    for {
+    //      kv       <- ZIO((1 to 5).toList)
+    //      _        <- ZIO.foreach(kv.map(i => (s"key$i", s"msg$i")))(i => produceOne("topic350", i._1, i._2))
+    //      _        <- consumer.subscribe(Subscription.Topics(Set("topic350")))
+    //      _        <- consumer.poll(1.second).repeat(Schedule.spaced(1.second) && Schedule.recurs(2))
+    //      _        <- consumer.seekToEnd(Set(new TopicPartition("topic350", 0)))
+    //      records1 <- pollNtimes(10, consumer)
+    //      _ <- ZIO.effectTotal {
+    //            records1 shouldEqual Chunk.empty
+    //          }
+    //    } yield ()
+    //  }
 
-      "seek to position" in runWithConsumer("group500", "client5000") { consumer =>
-        for {
-          kv <- ZIO((1 to 10).toList)
-          _  <- ZIO.foreach(kv.map(i => (s"key$i", s"msg$i")))(i => produceOne("topic500", i._1, i._2))
-          _  <- consumer.subscribe(Subscription.Topics(Set("topic500")))
-          _  <- consumer.poll(1.second).repeat(Schedule.spaced(1.second) && Schedule.recurs(2))
+    //  "seek to position" in runWithConsumer("group500", "client5000") { consumer =>
+    //    for {
+    //      kv <- ZIO((1 to 10).toList)
+    //      _  <- ZIO.foreach(kv.map(i => (s"key$i", s"msg$i")))(i => produceOne("topic500", i._1, i._2))
+    //      _  <- consumer.subscribe(Subscription.Topics(Set("topic500")))
+    //      _  <- consumer.poll(1.second).repeat(Schedule.spaced(1.second) && Schedule.recurs(2))
 
-          _        <- consumer.seek(new TopicPartition("topic500", 0), 5)
-          records1 <- pollNtimes(10, consumer)
-          _ <- ZIO.effectTotal {
-                records1.map { r =>
-                  (r.key, r.value)
-                } shouldEqual Chunk.fromIterable(kv.drop(5).map(i => (s"key$i", s"msg$i")))
-              }
-        } yield ()
-      }
-    }
+    //      _        <- consumer.seek(new TopicPartition("topic500", 0), 5)
+    //      records1 <- pollNtimes(10, consumer)
+    //      _ <- ZIO.effectTotal {
+    //            records1.map { r =>
+    //              (r.key, r.value)
+    //            } shouldEqual Chunk.fromIterable(kv.drop(5).map(i => (s"key$i", s"msg$i")))
+    //          }
+    //    } yield ()
+    //  }
+    //}
 
   }
-} */
+}
