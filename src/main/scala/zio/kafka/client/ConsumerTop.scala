@@ -1,4 +1,4 @@
-package kafkaconsumer
+package kafkaConsumer
 
 import KafkaPkg._
 // import KafkaTypes._

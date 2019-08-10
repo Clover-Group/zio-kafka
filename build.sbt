@@ -2,6 +2,7 @@ val mainScala    = "2.12.8"
 val allScala     = Seq("2.11.12", mainScala)
 val KafkaVersion = "2.3.0"
 val ZioVersion   = "1.0.0-RC11-1"
+val ArrowVersion = "0.14.1"
 
 organization := "dev.zio"
 homepage := Some(url("https://github.com/zio/zio-kafka"))
@@ -31,6 +32,7 @@ libraryDependencies ++= Seq(
   "dev.zio"                 %% "zio"            % ZioVersion,
   "org.apache.kafka"        % "kafka-clients"   % KafkaVersion,
   "io.github.embeddedkafka" %% "embedded-kafka" % KafkaVersion,
+  "org.apache.arrow"        % "arrow-vector"    % ArrowVersion,
   "org.scalatest"           %% "scalatest"      % "3.0.5" % "test",
   "ch.qos.logback"          % "logback-classic" % "1.2.3" % "test",
   compilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
