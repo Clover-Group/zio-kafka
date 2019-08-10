@@ -1,4 +1,4 @@
-package zio.kafka.client
+// package zio.kafka.client
 
 /* import com.typesafe.scalalogging.LazyLogging
 import net.manub.embeddedkafka.EmbeddedKafka

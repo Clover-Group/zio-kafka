@@ -4,7 +4,7 @@ import com.typesafe.scalalogging.LazyLogging
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.{ Serde, Serdes }
 import org.scalatest.{ Matchers, WordSpecLike }
-import zio.{ Chunk, DefaultRuntime, TaskR, UIO, ZIO }
+import zio.{ Chunk, DefaultRuntime, RIO, UIO, ZIO }
 import zio.blocking.Blocking
 import zio.clock.Clock
 import zio.duration._
@@ -29,7 +29,7 @@ class SimpleConsumer extends WordSpecLike with Matchers with LazyLogging with De
     )
 
   def runWithConsumer[A](groupId: String, clientId: String)(
-    r: Consumer[String, String] => TaskR[Blocking with Clock, A]
+    r: Consumer[String, String] => RIO[Blocking with Clock, A]
   ): A =
     unsafeRun(
       Consumer.make[String, String](settings(groupId, clientId)).use(r)
