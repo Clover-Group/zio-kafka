@@ -1,7 +1,11 @@
 val mainScala    = "2.12.8"
 val allScala     = Seq("2.11.12", mainScala)
 val KafkaVersion = "2.3.0"
+<<<<<<< HEAD
 val ZioVersion   = "1.0.0-RC10-1"
+=======
+val ZioVersion   = "1.0.0-RC11-1"
+>>>>>>> master
 
 organization := "dev.zio"
 homepage := Some(url("https://github.com/zio/zio-kafka"))
@@ -78,6 +82,13 @@ scalacOptions ++= Seq(
   case _ => Nil
 })
 
+<<<<<<< HEAD
+=======
+scalacOptions --= Seq(
+  "-Xfatal-warnings"
+)
+
+>>>>>>> master
 fork in run := true
 
 crossScalaVersions := allScala
